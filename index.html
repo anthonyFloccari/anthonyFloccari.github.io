@@ -1,0 +1,179 @@
+<html>
+<head>
+<script type="text/javascript">
+    var bgOffsetX = 0;
+    var bgOffsetY = 0;
+    var yPhase1 = 0;
+    var yPhase2 = Math.PI / 4;
+    var yPhase3 = 2 * Math.PI / 4;
+    var yPhase4 = 3 * Math.PI / 4;
+    var yAmp = 20;
+    var sizeX = 250;
+    var sizeY = 250;
+    var state1 = 0;
+    var state2 = 0;
+    var state3 = 0;
+    var state4 = 0;
+    var messages = [
+        "Hello",
+        "test test <br/> test"
+    ];
+    var messageIndex = 0;
+
+    function init() {
+        updateMsg();
+        positionElement(1, sizeX, sizeY, 0, 0);
+        positionElement(2, sizeX, sizeY, 0, 0);
+        positionElement(3, sizeX, sizeY, 0, 0);
+        positionElement(4, sizeX, sizeY, 0, 0);
+
+        setInterval(() => {
+            scrollBg();
+
+            yPhase1 += Math.PI / 20;
+            yPhase2 += Math.PI / 20;
+            yPhase3 += Math.PI / 20;
+            yPhase4 += Math.PI / 20;
+
+            var size1 = elementSize(1);
+            var size2 = elementSize(2);
+            var size3 = elementSize(3);
+            var size4 = elementSize(4);
+
+            var offsetY1 = Math.sin(yPhase1) * yAmp;
+            var offsetY2 = Math.sin(yPhase2) * yAmp;
+            var offsetY3 = Math.sin(yPhase3) * yAmp;
+            var offsetY4 = Math.sin(yPhase4) * yAmp;
+
+            positionElement(1, size1.y, size1.x, 0, offsetY1);
+            positionElement(2, size2.y, size2.x, 0, offsetY2);
+            positionElement(3, size3.y, size3.x, 0, offsetY3);
+            positionElement(4, size4.y, size4.x, 0, offsetY4);
+        }, 100)
+        setInterval(updateMsg, 4000);
+    }
+
+    function updateMsg() {
+        document.getElementById("message").innerHTML = messages[messageIndex % messages.length];
+        messageIndex++;
+    }
+
+    function scrollBg() {
+        var body = document.getElementsByTagName("body")[0]
+
+        bgOffsetX -= 10;
+        bgOffsetY += 10;
+
+        body.style.backgroundPositionX = bgOffsetX + "px";
+        body.style.backgroundPositionY = bgOffsetY + "px";
+    }
+
+    function positionElement(quad, height, width, offsetX, offsetY) {
+        var x, y;
+        var heightAdjust = (height > window.innerHeight/2) ? height - (window.innerHeight / 2) : 0;
+        var widthAdjust = (width > window.innerWidth/2) ? width - (window.innerWidth / 2) : 0;
+        switch(quad) {
+            case 1:
+                x = (window.innerWidth / 4) - (width / 2);
+                y = (window.innerHeight / 4) - (height / 2);
+                break;
+            case 2:
+                x = (3 * window.innerWidth / 4) - (width / 2) - widthAdjust;
+                y = (window.innerHeight / 4) - (height / 2);
+                break;
+            case 3:
+                x = (window.innerWidth / 4) - (width / 2);
+                y = (3 * window.innerHeight / 4) - (height / 2) - heightAdjust;
+                break;
+            case 4:
+                x = (3 * window.innerWidth / 4) - (width / 2) - widthAdjust;
+                y = (3 * window.innerHeight / 4) - (height / 2) - heightAdjust;
+                break;
+        }
+        x += offsetX;
+        y += offsetY;
+
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (x > window.innerWidth) x = window.innerWidth;
+        if (y > window.innerHeight) y = window.innerHeight;
+
+        var element = document.getElementById("img" + quad);
+        element.style.left = x + "px";
+        element.style.top = y + "px";
+        element.style.height = height + "px";
+        element.style.width = width + "px";
+
+        console.log("ele:" + quad, x, y)
+    }
+
+    var sizeState = {};
+    function elementSize(quad) {
+        var curState = sizeState[quad + "state"] || 0;
+        var curX = sizeState[quad + "x"] || sizeX;
+        var curY = sizeState[quad + "y"] || sizeY;
+
+        console.log(quad + "state", curState, curX, curY);
+
+        curX += curState * 50;
+        curY += curState * 50;
+
+        if (curX >= window.innerWidth && curY >= window.innerHeight) {
+            sizeState[quad + "state"] = -1;
+        } else if (curX <= 0 && curY <= 0) {
+            sizeState[quad + "state"] = 0;
+        }
+
+        if (curX >= window.innerWidth) curX = window.innerWidth;
+        if (curY >= window.innerHeight) curY = window.innerHeight;
+        if (curX <= sizeX) curX = sizeX;
+        if (curY <= sizeY) curY = sizeY;
+
+        sizeState[quad + "x"] = curX;
+        sizeState[quad + "y"] = curY;
+
+        return {
+            x: curX,
+            y: curY
+        }
+    }
+
+    var z = 1;
+    function onClickImg(quad) {
+        document.getElementById("img" + quad).style.zIndex = z;
+        z++;
+        sizeState[quad + "state"] = 1;
+    }
+</script>
+<style>
+    body {
+        background-image: url('img/corona2.jpg');
+        background-repeat: repeat;
+        background-size: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    img {
+        height: 200px;
+        width: 300px;
+        position: absolute;
+    }
+    #message {
+        display: flex;
+        font-size: 24px;
+        font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+        color: white;
+        text-transform: capitalize;
+    }
+</style>
+</head>
+<body onload="init()">
+    <img id="img1" src="img/1.jpg" onclick="onClickImg(1)"/>
+    <img id="img2" src="img/2.jpg" onclick="onClickImg(2)"/>
+    <img id="img3" src="img/3.jpg" onclick="onClickImg(3)"/>
+    <img id="img4" src="img/4.jpg" onclick="onClickImg(4)"/>
+    <div id="message">Hello</div>
+</body>
+</html>
